@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+	xmlns="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security.xsd">
+	<http auto-config="true" >
+		<csrf disabled="true" />
+		
+		<!--2 dòng intercept-url có tác dụng chỉ ra những trang nào cần đăng nhập mới có thể truy cập-->
+		<!-- với url bắt đầu bằng /admin/ chỉ tài khoản có role = ADMIN mới chuyển trang vào được -->
+		<intercept-url pattern="/admin/**" access="hasAnyRole('ADMIN')" /> 
+		<!-- với url bắt đầu bằng /user/ chỉ tài khoản có role = USER mới chuyển trang vào được -->
+		<intercept-url pattern="/user/**" access="hasAnyRole('USER')" />
+		
+		<!-- cấu hình trang tình huống đứng ở role này mà cố tình truy cập vào url của role khác -->
+		<access-denied-handler error-page="/accessDenied" />
+		
+		<form-login login-page="/login"
+			login-processing-url="/j_spring_security_login"
+			authentication-failure-url="/login?error"
+			authentication-success-handler-ref="customSuccessHandler"
+			username-parameter="username" 
+			password-parameter="password" />
+			
+		<logout logout-url="/j_spring_security_logout" logout-success-url="/logout" delete-cookies="JSESSIONID" />
+			
+	</http>
+	
+	<!-- cấu hình mã hoá bảo mật password bằng MD5 -->
+	<!-- customUserDetailService ở đây chính là tên class sẽ sử lí logic dùng để xử lí chức năng đăng nhập với password đã được mã hoá -->
+	<authentication-manager>
+		<authentication-provider user-service-ref="customUserDetailService">
+			<password-encoder ref="passwordEncoder" />
+		</authentication-provider>
+	</authentication-manager>
+	<!-- khai báo bean cho class tiến hành phân quyền nếu login thành công -->
+	<beans:bean id="customSuccessHandler" class="assignment.security.customSuccessHandler" />
+	<beans:bean id="CustomUserDetailService" class="assignment.service.CustomUserDetailService" />
+</beans:beans>
